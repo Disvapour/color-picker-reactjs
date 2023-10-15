@@ -53,8 +53,20 @@ export default function Home() {
   const [Opacity, setOpacity] = useState(1);
   const [Color, setColor] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [favIcon, setFavIcon] = useState('');
   const [isHueDragging, setIsHueDragging] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 1 });
+  const generateFavIcon = (col) => {
+    let canvas = document.createElement('canvas');
+    canvas.height = 64;
+    canvas.width = 64;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(32, 32, 32, 0, 2 * Math.PI);
+    ctx.fill();
+    return canvas.toDataURL('image/jpeg');
+  };
   const handleMoveBoth = (clientX, clientY) => {
     if (isDragging) {
       let offsetBottom =
@@ -131,57 +143,65 @@ export default function Home() {
     setHue(Math.floor(Math.random() * 360));
     setMousePos({ x: Math.random(), y: Math.random() });
   }, []);
+  useEffect(() => {
+    setFavIcon(generateFavIcon(Color));
+  }, [Color]);
   return (
-    <Frame
-      style={{
-        backgroundColor: Color,
-      }}
-      onMouseMove={(e) => {
-        handleMoveBoth(e.clientX, e.clientY);
-      }}
-      onMouseUp={() => {
-        isDragging && setIsDragging(false);
-        isHueDragging && setIsHueDragging(false);
-      }}
-    >
-      <ColorWheel
+    <>
+      <Head>
+        <link rel="icon" type="image/jpeg" href={favIcon} />
+      </Head>
+      <Frame
         style={{
-          backgroundColor: `hsla(${Hue}, 100%, 50%, 1)`,
+          backgroundColor: Color,
         }}
-        onMouseDown={(e) => {
-          setIsDragging(true);
+        onMouseMove={(e) => {
           handleMoveBoth(e.clientX, e.clientY);
         }}
-        ref={SelecterRef}
+        onMouseUp={() => {
+          isDragging && setIsDragging(false);
+          isHueDragging && setIsHueDragging(false);
+        }}
       >
-        <PickerButton
+        <ColorWheel
           style={{
-            bottom: `${Math.floor(mousePos.y * 100)}%`,
-            left: `${Math.floor(mousePos.x * 100)}%`,
-            backgroundColor: Color,
+            backgroundColor: `hsla(${Hue}, 100%, 50%, 1)`,
           }}
-          className={isDragging ? 'active' : ''}
-        />
-      </ColorWheel>
-      <HueSlider
-        onMouseDown={(e) => {
-          setIsHueDragging(true);
-          handleMoveBoth(e.clientX, e.clientY);
-        }}
-        ref={HueSelectorRef}
-      >
-        <PickerButton
+          onMouseDown={(e) => {
+            setIsDragging(true);
+            handleMoveBoth(e.clientX, e.clientY);
+          }}
+          ref={SelecterRef}
+        >
+          <PickerButton
+            style={{
+              bottom: `${Math.floor(mousePos.y * 100)}%`,
+              left: `${Math.floor(mousePos.x * 100)}%`,
+              backgroundColor: Color,
+            }}
+            className={isDragging ? 'active' : ''}
+          />
+        </ColorWheel>
+        <HueSlider
           onMouseDown={(e) => {
             setIsHueDragging(true);
+            handleMoveBoth(e.clientX, e.clientY);
           }}
-          style={{
-            transform: 'translate(-50%, 0)',
-            background: `hsl(${Hue}, 100%, 50%)`,
-            left: `${Math.floor((Hue / 360) * 100)}%`,
-          }}
-        />
-      </HueSlider>
-      <h2 style={{ position: 'fixed' }}>{Color}</h2>
-    </Frame>
+          ref={HueSelectorRef}
+        >
+          <PickerButton
+            onMouseDown={(e) => {
+              setIsHueDragging(true);
+            }}
+            style={{
+              transform: 'translate(-50%, 0)',
+              background: `hsl(${Hue}, 100%, 50%)`,
+              left: `${Math.floor((Hue / 360) * 100)}%`,
+            }}
+          />
+        </HueSlider>
+        <h2 style={{ position: 'fixed' }}>{Color}</h2>
+      </Frame>
+    </>
   );
 }
